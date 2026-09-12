@@ -30,3 +30,4 @@ jobs:
           file: coverage/cobertura-coverage.xml
           language: JavaScript
           label: code-coverage/c8
+          fail-on-error: false
