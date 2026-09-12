@@ -1,3 +1,4 @@
+import { StringDecoder } from "node:string_decoder";
 import { scanPaths } from "./discovery.js";
 import { scanText } from "./scanner.js";
 import { renderJSON, renderText } from "./render.js";
@@ -75,9 +76,10 @@ async function main(args, input = process.stdin, output = process.stdout, errorO
 
 async function readInput(stream) {
   if (typeof stream === "string") return stream;
+  const decoder = new StringDecoder("utf8");
   let text = "";
-  for await (const chunk of stream) text += chunk;
-  return text;
+  for await (const chunk of stream) text += decoder.write(chunk);
+  return text + decoder.end();
 }
 
 const helpText = help;

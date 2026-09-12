@@ -5,7 +5,7 @@ const SETEXT_PATTERN = /^\s{0,3}(?:=+|-+)\s*$/;
 const THEMATIC_BREAK_PATTERN = /^\s{0,3}(?:(?:\*\s*){3,}|(?:-\s*){3,}|(?:_\s*){3,})$/;
 const LIST_PATTERN = /^(\s{0,3})([-+*]|\d+[.)])\s+(.*)$/;
 const BLOCKQUOTE_PATTERN = /^\s{0,3}> ?(.*)$/;
-const HTML_BLOCK_PATTERN = /^\s{0,3}(?:<!--|<!DOCTYPE\b|<\/?(?:address|article|aside|base|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|ol|p|pre|script|section|summary|table|tbody|td|tfoot|th|thead|title|tr|ul)(?:\s|>|\/))/i;
+const HTML_BLOCK_PATTERN = /^\s{0,3}(?:<!--|<!DOCTYPE\b|<\/?[A-Za-z][A-Za-z0-9:-]*(?:\s|>|\/))/i;
 const SKIPPED_DIRECTORIES = new Set([".git", "node_modules", "vendor", "dist", "build", "coverage"]);
 const RECOGNIZED_EXTENSIONS = new Set([".md", ".markdown", ".mdown", ".mkdn", ".mdx", ".txt"]);
 
@@ -60,6 +60,16 @@ function isBlockquote(line) {
   return BLOCKQUOTE_PATTERN.exec(line);
 }
 
+function blockquotePayload(line) {
+  let payload = line;
+  let match = isBlockquote(payload);
+  while (match) {
+    payload = match[1];
+    match = isBlockquote(payload);
+  }
+  return payload;
+}
+
 function firstContentColumn(line) {
   const index = line.search(/\S/);
   return index < 0 ? 1 : index + 1;
@@ -85,6 +95,8 @@ function scanLines(lines, source) {
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
     const lineNumber = index + 1;
+    const blockquote = isBlockquote(line);
+    const structuralLine = blockquotePayload(line);
 
     if (frontMatter) {
       if (index > 0 && FRONT_MATTER_MARKERS.has(line.trim())) frontMatter = false;
@@ -93,13 +105,13 @@ function scanLines(lines, source) {
     }
 
     if (fence) {
-      const match = FENCE_PATTERN.exec(line);
+      const match = FENCE_PATTERN.exec(structuralLine);
       if (match && match[1][0] === fence.character && match[1].length >= fence.length) fence = null;
       active = null;
       continue;
     }
 
-    const fenceMatch = FENCE_PATTERN.exec(line);
+    const fenceMatch = FENCE_PATTERN.exec(structuralLine);
     if (fenceMatch) {
       fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
       active = null;
@@ -113,19 +125,24 @@ function scanLines(lines, source) {
     }
 
     if (htmlBlock) {
-      if (/^\s{0,3}<\//.test(line) || isBlank(line)) htmlBlock = false;
+      if (/^\s{0,3}<\//.test(structuralLine) || isBlank(structuralLine)) htmlBlock = false;
       active = null;
       continue;
     }
 
-    if (/^\s{0,3}<!--/.test(line)) {
-      htmlComment = !line.includes("-->");
+    if (structuralLine.includes("<!--") && !structuralLine.includes("-->")) {
+      htmlComment = !structuralLine.includes("-->");
       active = null;
       continue;
     }
 
-    if (isRawHtml(line)) {
-      htmlBlock = !/^\s{0,3}<\/?(?:hr|br|img|input|link|meta)\b[^>]*>\s*$/i.test(line) && !line.includes("</");
+    if (isRawHtml(structuralLine)) {
+      htmlBlock = !/^\s{0,3}<\/?(?:hr|br|img|input|link|meta)\b[^>]*>\s*$/i.test(structuralLine) && !/\/\>\s*$/.test(structuralLine) && !structuralLine.includes("</");
+      active = null;
+      continue;
+    }
+
+    if (blockquote && isBlank(structuralLine)) {
       active = null;
       continue;
     }
@@ -135,7 +152,6 @@ function scanLines(lines, source) {
       continue;
     }
 
-    const blockquote = isBlockquote(line);
     const listItem = isListItem(blockquote ? blockquote[1] : line);
     if (listItem) {
       active = { type: "list", explicit: /(?: {2}|\\)$/.test(listItem[3]), prefix: blockquote ? "blockquote-list" : "list" };
@@ -153,7 +169,7 @@ function scanLines(lines, source) {
       continue;
     }
 
-    if (active?.type === "list") {
+    if (active?.type === "list" && (active.prefix === "blockquote-list" || /^(?: {2,}|\t)/.test(line))) {
       findings.push(finding(source, lineNumber, line, active.explicit ? "explicit-hard-break" : "list-item-continuation"));
       continue;
     }

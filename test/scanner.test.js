@@ -47,6 +47,39 @@ test("reports continuations inside quoted list items", () => {
   assert.equal(result.findings[0].line, 2);
 });
 
+test("does not join a following paragraph to a list item", () => {
+  const result = scanText("- item\nseparate paragraph", { source: "list-boundary.md" });
+  assert.equal(result.findings.length, 0);
+});
+
+test("ignores blank quoted lines and nested structural blocks", () => {
+  const result = scanText("> quote\n>\n> next paragraph\n> ```js\n> code\n> ```\n> <svg>\n> markup\n> </svg>", { source: "nested-structure.md" });
+  assert.equal(result.findings.length, 0);
+});
+
+test("ignores multiline inline HTML comments", () => {
+  const result = scanText("Before <!-- comment\nstill inside comment -->\nAfter", { source: "comment.md" });
+  assert.equal(result.findings.length, 0);
+});
+
+test("ignores arbitrary raw HTML blocks", () => {
+  const result = scanText("<custom-element>\nwrapped content\n</custom-element>", { source: "custom.html.md" });
+  assert.equal(result.findings.length, 0);
+});
+
+test("handles nested quoted structures and inline comment boundaries", () => {
+  const nested = scanText("> > ```\n> > code\n> > ```\n> > <custom-element>\n> > markup\n> > </custom-element>", { source: "nested-quotes.md" });
+  assert.equal(nested.findings.length, 0);
+  const inline = scanText("First.\nSecond <!-- comment -->\nThird", { source: "inline-comment.md" });
+  assert.equal(inline.findings.length, 2);
+});
+
+test("does not keep self-closing custom HTML open", () => {
+  const result = scanText("<custom-element />\nFirst line.\nSecond line.", { source: "self-closing.md" });
+  assert.equal(result.findings.length, 1);
+  assert.equal(result.findings[0].line, 3);
+});
+
 test("explicit hard breaks remain findings", () => {
   const result = scanText("First line with two spaces  \nSecond line.", { source: "break.md" });
   assert.equal(result.findings.length, 1);
