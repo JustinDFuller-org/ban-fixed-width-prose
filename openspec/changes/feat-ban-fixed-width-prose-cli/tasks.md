@@ -21,7 +21,7 @@
 
 - [x] 4.1 Configure the test command to generate Cobertura XML and enforce at least 90% line and branch coverage, then verify the coverage command succeeds and emits the expected report.
 - [x] 4.2 Add GitHub Actions CI for default-branch pushes and pull requests using Node 24, dependency installation, tests, and coverage thresholds, then verify the workflow structure and local command parity.
-- [x] 4.3 Add conditional GitHub Code Quality coverage upload with the required permission and fork pull-request safety condition, then verify the workflow contains the expected upload inputs and guard.
+- [x] 4.3 Keep downstream coverage-service integration out of scope; verify CI retains Cobertura generation and threshold enforcement without additional repository permissions.
 
 ## 5. Documentation and final validation
 

@@ -115,7 +115,7 @@ The package SHALL expose importable scanning functions that return the same norm
 
 ### Requirement: CI measures and enforces implementation coverage
 
-The repository CI SHALL run the complete Node.js test suite on pushes to the default branch and pull requests, SHALL generate a Cobertura XML coverage report, SHALL enforce at least 90 percent line coverage and 90 percent branch coverage, and SHALL upload the report to GitHub Code Quality when the event has permission to upload it.
+The repository CI SHALL run the complete Node.js test suite on pushes to the default branch and pull requests, SHALL generate a Cobertura XML coverage report, and SHALL enforce at least 90 percent line coverage and 90 percent branch coverage.
 
 #### Scenario: Coverage threshold passes
 
@@ -126,8 +126,3 @@ The repository CI SHALL run the complete Node.js test suite on pushes to the def
 
 - **WHEN** either line or branch coverage is below 90 percent
 - **THEN** the CI test job fails
-
-#### Scenario: Fork pull request
-
-- **WHEN** CI runs for a pull request from a fork
-- **THEN** tests and coverage thresholds still run, while the coverage upload is skipped unless the event satisfies GitHub’s safe upload condition

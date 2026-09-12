@@ -40,6 +40,13 @@ test("recognizes nested and quoted list starts", () => {
   assert.equal(result.findings[0].reason, "list-item-continuation");
 });
 
+test("reports continuations inside quoted list items", () => {
+  const result = scanText("> - First item.\n> continuation.", { source: "quoted-list.md" });
+  assert.equal(result.findings.length, 1);
+  assert.equal(result.findings[0].reason, "list-item-continuation");
+  assert.equal(result.findings[0].line, 2);
+});
+
 test("explicit hard breaks remain findings", () => {
   const result = scanText("First line with two spaces  \nSecond line.", { source: "break.md" });
   assert.equal(result.findings.length, 1);

@@ -143,6 +143,11 @@ function scanLines(lines, source) {
     }
 
     if (blockquote) {
+      if (active?.type === "list" && active.prefix === "blockquote-list") {
+        findings.push(finding(source, lineNumber, line, active.explicit ? "explicit-hard-break" : "list-item-continuation"));
+        active = { type: "list", explicit: /(?: {2}|\\)$/.test(blockquote[1]), prefix: "blockquote-list" };
+        continue;
+      }
       if (active?.type === "blockquote") findings.push(finding(source, lineNumber, line, active.explicit ? "explicit-hard-break" : "blockquote-continuation"));
       active = { type: "blockquote", explicit: /(?: {2}|\\)$/.test(blockquote[1]) };
       continue;

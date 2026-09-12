@@ -38,7 +38,7 @@ The core API will return findings, summary counts, and errors. Findings will inc
 
 ### Use native ESM and development-only coverage tooling
 
-The package will declare Node 24+ compatibility, use built-in filesystem/process APIs and `node:test` where practical, and avoid runtime dependencies. Development dependencies may provide coverage instrumentation and Cobertura output. CI will run on the default branch and pull requests, enforce both thresholds, and conditionally invoke `actions/upload-code-coverage@v1` with the minimum required `code-quality: write` permission.
+The package will declare Node 24+ compatibility, use built-in filesystem/process APIs and `node:test` where practical, and avoid runtime dependencies. Development dependencies may provide coverage instrumentation and Cobertura output. CI will run on the default branch and pull requests and enforce both thresholds.
 
 ### Do not auto-fix findings
 
@@ -49,7 +49,7 @@ The CLI will report violations and fail through its exit code. Reflowing prose i
 - [Markdown dialect variation] -> Keep structural recognition explicit, document supported constructs, and use fixture-driven regression tests for both findings and false positives.
 - [Conservative extension filtering] -> Permit explicit files and `--stdin` so integrations can scan content that lacks a normal document extension.
 - [Parser false positives or misses] -> Report the continuation line and reason, maintain adversarial fixtures, and keep the state machine small enough to audit.
-- [Coverage upload permissions] -> Always enforce tests and thresholds; skip only the upload step for events that cannot safely receive `code-quality: write`.
+- [Coverage service integration] -> Keep Cobertura generation and threshold enforcement local to CI; downstream coverage-service integration is out of scope.
 - [Node 24 compatibility] -> Declare the engine floor and run CI on the declared runtime so unsupported environments fail clearly.
 
 ## Migration Plan

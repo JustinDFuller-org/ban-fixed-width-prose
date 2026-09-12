@@ -10,7 +10,7 @@ Agent-generated and manually formatted prose is often hard-wrapped at a fixed co
 - Report deterministic source, line, column, reason, and excerpt findings in JSON by default, with concise text output available.
 - Use exit status `0` for clean input, `1` for findings, and `2` for invalid options or operational failures.
 - Expose importable scanning functions so future integrations can reuse the detector without duplicating its semantics.
-- Add Node test coverage and CI coverage reporting in Cobertura format, enforcing 90% line and branch coverage and uploading results to GitHub Code Quality when permitted.
+- Add Node test coverage and CI coverage reporting in Cobertura format, enforcing 90% line and branch coverage.
 
 ## Capabilities
 
@@ -26,4 +26,4 @@ None.
 
 - Adds the CLI package, scanner library, command-line interface, tests, package metadata, and CI workflow.
 - Establishes a stable JSON result and exit-code contract for future GitHub Action, Claude, Cursor, and Codex integrations.
-- Adds development-only coverage tooling and GitHub Code Quality upload configuration; no runtime dependency or later integration is included in this change.
+- Adds development-only coverage tooling and CI configuration; no runtime dependency or later integration is included in this change.

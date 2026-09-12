@@ -6,6 +6,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import { helpText, main, parseArgs } from "../src/cli.js";
 import { scanPaths } from "../src/discovery.js";
+import * as packageExports from "../src/index.js";
 
 function stream() {
   return { value: "", write(chunk) { this.value += chunk; } };
@@ -26,6 +27,13 @@ test("parses supported options and rejects invalid options", () => {
   assert.throws(() => parseArgs(["--format", "xml"]), /unsupported format/);
   assert.throws(() => parseArgs(["--unknown"]), /unknown option/);
   assert.throws(() => parseArgs(["--include"]), /requires a value/);
+});
+
+test("package entry exports the reusable API", () => {
+  assert.equal(typeof packageExports.scanText, "function");
+  assert.equal(typeof packageExports.scanPaths, "function");
+  assert.equal(typeof packageExports.main, "function");
+  assert.equal("run" in packageExports, false);
 });
 
 test("renders help and version", async () => {

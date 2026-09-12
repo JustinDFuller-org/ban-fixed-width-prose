@@ -34,7 +34,13 @@ function recognizedFile(filePath) {
 }
 
 async function discover(root, options, relativeRoot = root) {
-  const entries = await fs.readdir(root, { withFileTypes: true });
+  let entries;
+  try {
+    entries = await fs.readdir(root, { withFileTypes: true });
+  } catch (error) {
+    options.errors?.push(`${displaySource(root, options.cwd || relativeRoot)}: ${error.message}`);
+    return [];
+  }
   const files = [];
   for (const entry of entries) {
     if (entry.isSymbolicLink()) continue;
@@ -74,12 +80,13 @@ export async function scanPaths(inputPaths = [], options = {}) {
   const cwd = path.resolve(options.cwd || process.cwd());
   const paths = inputPaths.length > 0 ? inputPaths : [cwd];
   const files = [];
+  const discoveryErrors = [];
   const errors = [];
   for (const input of paths) {
     const resolved = path.resolve(cwd, input);
     try {
       const stats = await fs.stat(resolved);
-      if (stats.isDirectory()) files.push(...await discover(resolved, { ...options, cwd }, resolved));
+      if (stats.isDirectory()) files.push(...await discover(resolved, { ...options, cwd, errors: discoveryErrors }, resolved));
       else if (stats.isFile()) {
         const relativePath = displaySource(resolved, cwd);
         if (matchesAny(relativePath, options.include || []) && !(options.exclude || []).some((pattern) => globToRegExp(normalizePath(pattern)).test(relativePath))) files.push(resolved);
@@ -102,7 +109,7 @@ export async function scanPaths(inputPaths = [], options = {}) {
   return {
     findings,
     summary: { filesScanned: uniqueFiles.length, filesWithFindings: new Set(findings.map((item) => item.source)).size, findingCount: findings.length },
-    errors
+    errors: [...discoveryErrors, ...errors]
   };
 }
 
