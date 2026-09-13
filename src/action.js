@@ -43,6 +43,25 @@ function findingRow(finding) {
   return [finding.source, `${finding.line}:${finding.column}`, finding.reason, finding.excerpt];
 }
 
+async function report(coreApi, result) {
+  coreApi.setOutput("finding-count", result.summary.findingCount);
+  coreApi.setOutput("files-scanned", result.summary.filesScanned);
+  coreApi.setOutput("files-with-findings", result.summary.filesWithFindings);
+  coreApi.setOutput("error-count", result.summary.errorCount);
+  for (const finding of result.findings) coreApi.error(`${finding.source}:${finding.line}:${finding.column} ${finding.reason}: ${finding.excerpt}`);
+  for (const error of result.errors) coreApi.error(error);
+  const summary = coreApi.summary.addHeading("Fixed-width prose scan").addTable([
+    [{ data: "Metric", header: true }, { data: "Count", header: true }],
+    ["Findings", String(result.summary.findingCount)],
+    ["Files scanned", String(result.summary.filesScanned)],
+    ["Files with findings", String(result.summary.filesWithFindings)],
+    ["Operational errors", String(result.summary.errorCount)]
+  ]);
+  if (result.findings.length > 0) summary.addHeading("Findings").addTable([["Source", "Location", "Reason", "Excerpt"], ...result.findings.map(findingRow)]);
+  if (result.errors.length > 0) summary.addHeading("Operational errors").addRaw(result.errors.join("\n"));
+  await summary.write();
+}
+
 export async function run({ coreApi = core, fsApi = fs, env = process.env } = {}) {
   try {
     const inputs = parseInputs(coreApi);
@@ -56,27 +75,14 @@ export async function run({ coreApi = core, fsApi = fs, env = process.env } = {}
       pullRequest = { findings: [], errors: [`pull-request-description: ${error.message}`], summary: { filesScanned: 0 } };
     }
     const result = aggregate(repository, pullRequest);
-    coreApi.setOutput("finding-count", result.summary.findingCount);
-    coreApi.setOutput("files-scanned", result.summary.filesScanned);
-    coreApi.setOutput("files-with-findings", result.summary.filesWithFindings);
-    coreApi.setOutput("error-count", result.summary.errorCount);
-    for (const finding of result.findings) coreApi.error(`${finding.source}:${finding.line}:${finding.column} ${finding.reason}: ${finding.excerpt}`);
-    for (const error of result.errors) coreApi.error(error);
-    const summary = coreApi.summary.addHeading("Fixed-width prose scan").addTable([
-      [{ data: "Metric", header: true }, { data: "Count", header: true }],
-      ["Findings", String(result.summary.findingCount)],
-      ["Files scanned", String(result.summary.filesScanned)],
-      ["Files with findings", String(result.summary.filesWithFindings)],
-      ["Operational errors", String(result.summary.errorCount)]
-    ]);
-    if (result.findings.length > 0) summary.addHeading("Findings").addTable([["Source", "Location", "Reason", "Excerpt"], ...result.findings.map(findingRow)]);
-    if (result.errors.length > 0) summary.addHeading("Operational errors").addRaw(result.errors.join("\n"));
-    await summary.write();
+    await report(coreApi, result);
     if (result.findings.length > 0 || result.errors.length > 0) coreApi.setFailed("Fixed-width prose scan failed");
     return result;
   } catch (error) {
+    const result = { findings: [], errors: [error.message], summary: { findingCount: 0, filesScanned: 0, filesWithFindings: 0, errorCount: 1 } };
+    await report(coreApi, result);
     coreApi.setFailed(`Fixed-width prose action error: ${error.message}`);
-    return { findings: [], errors: [error.message] };
+    return result;
   }
 }
 

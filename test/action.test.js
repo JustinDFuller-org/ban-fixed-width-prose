@@ -62,3 +62,13 @@ test("reports event payload errors distinctly", async () => {
   assert.equal(h.outputs["error-count"], 1);
   assert.match(h.errors.join("\n"), /cannot read event/);
 });
+
+test("reports invalid inputs with outputs and a summary", async () => {
+  const h = harness();
+  h.coreApi.getBooleanInput = () => { throw new Error("invalid boolean"); };
+  const result = await run(h);
+  assert.deepEqual(result.summary, { findingCount: 0, filesScanned: 0, filesWithFindings: 0, errorCount: 1 });
+  assert.equal(h.outputs["error-count"], 1);
+  assert.equal(h.outputs["finding-count"], 0);
+  assert.equal(h.summary.written, true);
+});
