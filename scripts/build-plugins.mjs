@@ -26,3 +26,15 @@ for (const [name, entry] of [["ban-fixed-width-prose-hard-block", "src/claude-ho
   await cp(path.join(temporary, "index.js"), path.join(output, "hook.mjs"));
   await rm(temporary, { recursive: true, force: true });
 }
+
+for (const [name, entry] of [["ban-fixed-width-prose-hard-block", "src/cursor-hook-hard-block.js"], ["ban-fixed-width-prose-warn", "src/cursor-hook-warn.js"]]) {
+  const plugin = path.join(root, "cursor-plugins", name);
+  const output = path.join(plugin, "bin");
+  await rm(output, { recursive: true, force: true });
+  await mkdir(output, { recursive: true });
+  const temporary = path.join(root, ".cursor-plugin-" + name);
+  await rm(temporary, { recursive: true, force: true });
+  await run("npx", ["--no-install", "ncc", "build", entry, "--minify", "-o", temporary], { cwd: root });
+  await cp(path.join(temporary, "index.js"), path.join(output, "hook.mjs"));
+  await rm(temporary, { recursive: true, force: true });
+}
