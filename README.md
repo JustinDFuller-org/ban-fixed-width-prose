@@ -104,7 +104,7 @@ Disable or uninstall the selected Claude plugin to roll back its early guidance.
 
 ## Releases
 
-Stable releases begin automatically when an administrator pushes a protected `vMAJOR.MINOR.PATCH` tag on the current `main` commit. The release workflow validates the package, creates a checksum-protected npm tarball, and stages that exact artifact through the protected `npm-publish` environment.
+Stable releases begin automatically when an administrator pushes a protected `vMAJOR.MINOR.PATCH` tag on the current `main` commit. The release workflow validates the package, creates a checksum-protected npm tarball, and pauses at the protected `npm-publish` GitHub environment for its required approval before staging that exact artifact.
 
 The staged package is not public until a maintainer reviews it in npm's Staged Packages tab and approves it with npm two-factor authentication. Use `npm stage list`, `npm stage view`, and `npm stage download` to inspect a pending stage; use `npm stage approve <stage-id>` to publish it or `npm stage reject <stage-id>` to discard it. Resolve or reject an existing stage before retrying the same package version.
 
