@@ -36,6 +36,29 @@ JSON output contains `findings`, `summary`, and `errors`. Each finding contains 
 
 Import `scanText` for text input and `scanPaths` for files or directories. Both return the normalized findings, summary, and errors used by the CLI.
 
+## GitHub Action
+
+Add checkout and one Action step to a read-only pull request workflow:
+
+```yaml
+name: Prose
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+permissions:
+  contents: read
+jobs:
+  prose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: JustinDFuller-org/ban-fixed-width-prose@v1
+```
+
+The Action scans supported repository documents by default and automatically scans pull request descriptions. Use an immutable commit or release tag when supply-chain pinning is required; `v1` is the maintained major reference. `paths`, `include`, and `exclude` accept newline-separated values, and `debug: true` enables diagnostics. Outputs are `finding-count`, `files-scanned`, `files-with-findings`, and `error-count`.
+
+Findings and operational errors fail the step after being written to safe logs and the Step Summary. The Action is read-only, does not post comments, and retains the scanner's `.git`, dependency, generated, build, coverage, and Git-ignored exclusions for default scans. Explicit paths can scan ignored files.
+
 ## Development
 
 Run `npm ci` with Node.js 24, `npm test` for the test suite, and `npm run coverage` for Cobertura output and the enforced 90% line-and-branch coverage gate.

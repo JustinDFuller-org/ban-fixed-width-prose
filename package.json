@@ -22,8 +22,9 @@
     "test": "node --test",
     "coverage": "c8 --reporter=text --reporter=cobertura --check-coverage --lines=90 --branches=90 node --test",
     "build": "ncc build src/action.js --minify -o dist",
+    "check-action": "node scripts/validate-action.mjs",
     "check-bundle": "npm run build && git diff --exit-code -- dist/index.js",
-    "check": "npm test && npm run coverage && npm run check-bundle"
+    "check": "npm test && npm run coverage && npm run check-action && npm run check-bundle"
   },
   "devDependencies": {
     "@actions/core": "^1.11.1",

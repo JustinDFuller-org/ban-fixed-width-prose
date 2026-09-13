@@ -13,12 +13,12 @@
 
 - [x] 3.1 Add source-level unit and integration coverage for input parsing, event variants, PR-body source labels, filters, outputs, summaries, errors, and cross-platform path normalization; verify the enforced line and branch coverage thresholds remain satisfied.
 - [x] 3.2 Add deterministic bundling with the Action's runtime dependencies and verify the generated `dist/index.js` is committed, executable with the declared Node 24 runtime, and reproducible from a clean install.
-- [ ] 3.3 Add CI checks for Action metadata, bundle freshness, package tests, coverage, OpenSpec validation, and repository hygiene; verify the workflow fails on stale or invalid Action artifacts.
+- [x] 3.3 Add CI checks for Action metadata, bundle freshness, package tests, coverage, OpenSpec validation, and repository hygiene; verify the workflow fails on stale or invalid Action artifacts.
 
 ## 4. Consumer documentation and self-adoption
 
-- [ ] 4.1 Document the minimal `actions/checkout` plus one `uses`-step workflow, recommended `pull_request` activity types including description edits, read-only permissions, `v1` versus immutable pinning, optional inputs, outputs, exclusions, and failure behavior; verify examples match the Action metadata and implementation.
-- [ ] 4.2 Add a repository self-check workflow that exercises repository scanning and automatic pull request-description scanning without requiring an enablement input; verify its workflow structure and local test fixtures.
+- [x] 4.1 Document the minimal `actions/checkout` plus one `uses`-step workflow, recommended `pull_request` activity types including description edits, read-only permissions, `v1` versus immutable pinning, optional inputs, outputs, exclusions, and failure behavior; verify examples match the Action metadata and implementation.
+- [x] 4.2 Add a repository self-check workflow that exercises repository scanning and automatic pull request-description scanning without requiring an enablement input; verify its workflow structure and local test fixtures.
 
 ## 5. Release and hosted proof
 
