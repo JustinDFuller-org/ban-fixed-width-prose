@@ -95,6 +95,19 @@ test("symlink targets outside the workspace fail open", async () => {
   }
 });
 
+test("dangling symlink targets fail open", async () => {
+  const workspace = await mkdtemp(path.join(tmpdir(), "fixed-width-prose-workspace-"));
+  const outside = await mkdtemp(path.join(tmpdir(), "fixed-width-prose-outside-"));
+  try {
+    await symlink(path.join(outside, "future.md"), path.join(workspace, "link.md"));
+    const result = await evaluateClaudeHook({ hook_event_name: "PreToolUse", tool_name: "Write", cwd: workspace, tool_input: { file_path: path.join(workspace, "link.md"), content: clean } });
+    assert.match(result.hookSpecificOutput.additionalContext, /dangling symlink/);
+  } finally {
+    await rm(workspace, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
+  }
+});
+
 test("real path resolution failures fail open", async () => {
   const nested = await evaluateClaudeHook(event("Write", { file_path: "/workspace/nested/new.md", content: clean }), { read: async () => { const error = new Error("missing"); error.code = "ENOENT"; throw error; } });
   assert.deepEqual(nested, {});

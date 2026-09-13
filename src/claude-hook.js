@@ -1,5 +1,5 @@
 import path from "node:path";
-import { readFile, realpath } from "node:fs/promises";
+import { lstat, readFile, realpath } from "node:fs/promises";
 import { RECOGNIZED_EXTENSIONS, scanText } from "./scanner.js";
 import { newFindings } from "./codex-hook.js";
 
@@ -46,7 +46,7 @@ async function readCurrent(file, read) {
   }
 }
 
-async function existingPath(value, resolve) {
+async function existingPath(value, resolve, inspect = lstat) {
   let candidate = value;
   let suffix = "";
   while (true) {
@@ -55,6 +55,13 @@ async function existingPath(value, resolve) {
       return suffix ? path.join(resolved, suffix) : resolved;
     } catch (error) {
       if (error.code !== "ENOENT") throw error;
+      let stats;
+      try {
+        stats = await inspect(candidate);
+      } catch (inspectError) {
+        if (inspectError.code !== "ENOENT") throw inspectError;
+      }
+      if (stats?.isSymbolicLink()) throw new Error(`edit path cannot be safely resolved through a dangling symlink: ${candidate}`);
       const parent = path.dirname(candidate);
       if (parent === candidate) throw error;
       suffix = suffix ? path.join(path.basename(candidate), suffix) : path.basename(candidate);
