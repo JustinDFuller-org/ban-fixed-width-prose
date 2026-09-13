@@ -1,4 +1,5 @@
 import { promises as fs } from "node:fs";
+import { fileURLToPath } from "node:url";
 import * as core from "@actions/core";
 import { scanPaths } from "./discovery.js";
 import { scanText } from "./scanner.js";
@@ -79,4 +80,4 @@ export async function run({ coreApi = core, fsApi = fs, env = process.env } = {}
   }
 }
 
-if (process.env.GITHUB_ACTIONS === "true") await run();
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) await run();
