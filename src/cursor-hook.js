@@ -188,6 +188,7 @@ export async function evaluateCursorHook(event, options = {}) {
       if (!values) return diagnostic("the event has no stable conversation, generation, tool-use, or file identity", true);
       const stateDir = options.stateDir || defaultStateDir();
       const record = await consumeState(statePath(stateDir, values), options.read || readFile, options.remove || unlink);
+      if (Date.now() - record.createdAt > (options.ttl || TTL_MS)) return diagnostic("warning state was expired and was ignored", true);
       if (JSON.stringify(record.identity) !== JSON.stringify(values)) return diagnostic("warning state did not match this event", true);
       return record.findings.length ? { additional_context: messageFor(record.findings) } : {};
     }

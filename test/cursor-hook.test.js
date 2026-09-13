@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { cleanup, evaluateCursorHook, replaceText, statePath } from "../src/cursor-hook.js";
@@ -130,8 +130,16 @@ test("expired and mismatched warning records fail open without attribution", asy
   await writeFile(expired, JSON.stringify({ createdAt: 0, identity, findings: [] }));
   await cleanup(stateDir, Date.now(), 1);
   await assert.rejects(readFile(expired, "utf8"));
+  await evaluateCursorHook(event(root, "preToolUse", { content: fixture }), { mode: "warn", stateDir });
+  const active = (await readdir(stateDir)).find((name) => name.endsWith(".json"));
+  await writeFile(path.join(stateDir, active), JSON.stringify({ createdAt: 0, identity, findings: [{ source: "note.md", line: 2, column: 1, reason: "paragraph-continuation", excerpt: "bad" }] }));
+  const expiredResult = await evaluateCursorHook(event(root, "postToolUse", { content: fixture }), { mode: "warn", stateDir, ttl: 1 });
+  assert.match(expiredResult.additional_context, /expired/);
+  await evaluateCursorHook(event(root, "preToolUse", { content: fixture }), { mode: "warn", stateDir });
+  const mismatch = (await readdir(stateDir)).find((name) => name.endsWith(".json"));
+  await writeFile(path.join(stateDir, mismatch), JSON.stringify({ createdAt: Date.now(), identity: ["other"], findings: [] }));
   const result = await evaluateCursorHook(event(root, "postToolUse", { content: fixture }), { mode: "warn", stateDir });
-  assert.match(result.additional_context, /allowed/);
+  assert.match(result.additional_context, /did not match/);
   await rm(root, { recursive: true, force: true });
   await rm(stateDir, { recursive: true, force: true });
 });
