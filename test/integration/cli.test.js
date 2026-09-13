@@ -20,7 +20,7 @@ test("CLI renders clean text output, help, and version", async () => {
   assert.equal(clean.status, 0);
   assert.equal(clean.stdout, "");
   assert.match((await run(["--help"])).stdout, /Usage:/);
-  assert.match((await run(["--version"])).stdout, /^1\.0\.0\n$/);
+  assert.match((await run(["--version"])).stdout, /^1\.1\.0\n$/);
 });
 
 test("CLI scans stdin and rejects invalid combinations", async () => {
