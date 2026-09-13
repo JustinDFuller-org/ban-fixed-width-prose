@@ -1,0 +1,6 @@
+{
+  "name": "ban-fixed-width-prose-warn",
+  "version": "1.2.0",
+  "description": "Warn about newly introduced hard-wrapped prose in native Claude file edits.",
+  "author": { "name": "JustinDFuller-org" }
+}
