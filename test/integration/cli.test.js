@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import test from "node:test";
+import packageData from "../../package.json" with { type: "json" };
 
 const root = path.resolve("bin/ban-fixed-width-prose.js");
 
@@ -20,7 +21,7 @@ test("CLI renders clean text output, help, and version", async () => {
   assert.equal(clean.status, 0);
   assert.equal(clean.stdout, "");
   assert.match((await run(["--help"])).stdout, /Usage:/);
-  assert.match((await run(["--version"])).stdout, /^1\.2\.0\n$/);
+  assert.equal((await run(["--version"])).stdout, `${packageData.version}\n`);
 });
 
 test("CLI scans stdin and rejects invalid combinations", async () => {
