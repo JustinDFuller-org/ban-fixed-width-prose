@@ -22,9 +22,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: JustinDFuller-org/ban-fixed-width-prose
+          ref: ${{ inputs.version || github.event.release.tag_name }}
+          path: action-under-test
       - id: clean
         continue-on-error: true
-        uses: JustinDFuller-org/ban-fixed-width-prose@${{ inputs.version || github.event.release.tag_name }}
+        uses: ./action-under-test
         with:
           paths: test/fixtures/clean.md
       - if: steps.clean.outcome != 'success' || steps.clean.outputs.finding-count != '0' || steps.clean.outputs.error-count != '0'
@@ -32,7 +37,7 @@ jobs:
         run: exit 1
       - id: finding
         continue-on-error: true
-        uses: JustinDFuller-org/ban-fixed-width-prose@${{ inputs.version || github.event.release.tag_name }}
+        uses: ./action-under-test
         with:
           paths: test/fixtures/wrapped.md
       - if: steps.finding.outcome != 'failure' || steps.finding.outputs.finding-count == '0' || steps.finding.outputs.error-count != '0'
@@ -40,7 +45,7 @@ jobs:
         run: exit 1
       - id: error
         continue-on-error: true
-        uses: JustinDFuller-org/ban-fixed-width-prose@${{ inputs.version || github.event.release.tag_name }}
+        uses: ./action-under-test
         with:
           paths: test/fixtures/missing.md
       - if: steps.error.outcome != 'failure' || steps.error.outputs.finding-count != '0' || steps.error.outputs.error-count == '0'
