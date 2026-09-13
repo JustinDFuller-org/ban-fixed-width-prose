@@ -59,6 +59,23 @@ The Action scans supported repository documents by default and automatically sca
 
 Findings and operational errors fail the step after being written to safe logs and the Step Summary. The Action is read-only, does not post comments, and retains the scanner's `.git`, dependency, generated, build, coverage, and Git-ignored exclusions for default scans. Explicit paths can scan ignored files.
 
+## Codex plugins
+
+This repository includes a local marketplace catalog with two separately installable Codex plugins:
+
+```sh
+codex plugin marketplace add .
+codex plugin add ban-fixed-width-prose-hard-block --marketplace ban-fixed-width-prose
+# or:
+codex plugin add ban-fixed-width-prose-warn --marketplace ban-fixed-width-prose
+```
+
+Review and trust the plugin hooks through `/hooks` before using them. The hard-block variant denies supported, reconstructible `PreToolUse` file edits that introduce new findings. The warning variant allows the edit and adds the same remediation guidance to model context. Both variants compare findings by reason and excerpt, so unchanged legacy findings do not block unrelated edits and repairs are allowed.
+
+Coverage is limited to `.md`, `.markdown`, `.mdown`, `.mkdn`, `.mdx`, and `.txt` paths and the registered file-edit tool shapes. Malformed events, reconstruction failures, and scanner failures fail open with a visible diagnostic. Opaque shell writes, generators, redirections, MCP writers, and specialized tool paths may not be reconstructible; use the CLI or GitHub Action for final enforcement.
+
+Disable or remove the selected plugin to roll back its early guidance. This does not change the CLI or Action behavior.
+
 ## Development
 
 Run `npm ci` with Node.js 24, `npm test` for the test suite, and `npm run coverage` for Cobertura output and the enforced 90% line-and-branch coverage gate.
