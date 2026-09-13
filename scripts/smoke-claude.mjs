@@ -41,10 +41,12 @@ try {
   const repair = await invoke("ban-fixed-width-prose-hard-block", event("Edit", { path: "legacy.md", old_string: current, new_string: "One repaired paragraph.\n" }));
   const malformed = await pipe("node", [path.join(root, "claude-plugins", "ban-fixed-width-prose-hard-block", "bin/hook.mjs")], { cwd: repo }, "not-json");
   const malformedResult = JSON.parse(malformed.stdout);
+  const missingPayload = await invoke("ban-fixed-width-prose-hard-block", JSON.stringify({ hook_event_name: "PreToolUse", tool_name: "Write", cwd: repo }));
   const symlinkResult = await invoke("ban-fixed-width-prose-hard-block", event("Write", { path: "link.md", content: wrapped }));
   const danglingResult = await invoke("ban-fixed-width-prose-hard-block", event("Write", { path: "dangling.md", content: "One complete line.\n" }));
   if (Object.keys(clean).length || Object.keys(legacy).length || Object.keys(repair).length) throw new Error("clean, legacy, or repair edit was not allowed");
   if (!malformedResult.hookSpecificOutput?.additionalContext) throw new Error("malformed input did not provide diagnostics");
+  if (!missingPayload.hookSpecificOutput?.additionalContext?.includes("payload is missing")) throw new Error("missing native payload did not fail open");
   if (!symlinkResult.hookSpecificOutput?.additionalContext?.includes("symlink")) throw new Error("symlink escape did not fail open");
   if (!danglingResult.hookSpecificOutput?.additionalContext?.includes("dangling symlink")) throw new Error("dangling symlink escape did not fail open");
   console.log("claude-smoke-ok hard=deny warn=context clean=allow legacy=allow repair=allow malformed=context symlink=context dangling=context");

@@ -32,6 +32,10 @@ test("unsupported and unrelated native calls pass without policy output", async 
   assert.deepEqual(await evaluateClaudeHook(event("Write", { file_path: "/workspace/note.js", content: wrapped }), { read }), {});
   assert.deepEqual(await evaluateClaudeHook(event("NotebookEdit", { file_path: "/workspace/note.md", content: wrapped }), { read }), {});
   assert.deepEqual(await evaluateClaudeHook({ hook_event_name: "PostToolUse", tool_name: "Write", tool_input: {} }, { read }), {});
+  const missing = await evaluateClaudeHook({ hook_event_name: "PreToolUse", tool_name: "Write" }, { read });
+  assert.match(missing.hookSpecificOutput.additionalContext, /payload is missing/);
+  const nullInput = await evaluateClaudeHook({ hook_event_name: "PreToolUse", tool_name: "Edit", tool_input: null }, { read });
+  assert.match(nullInput.hookSpecificOutput.additionalContext, /payload is missing/);
 });
 
 test("legacy findings and repairs are allowed", async () => {

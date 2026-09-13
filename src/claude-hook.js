@@ -101,7 +101,8 @@ function findingMessage(findings) {
 
 export async function evaluateClaudeHook(event, { mode = "hard-block", cwd = process.cwd(), read = readFile, scan = scanText, resolve = realpath } = {}) {
   try {
-    if (!event || event.hook_event_name !== "PreToolUse" || !TOOL_NAMES.has(event.tool_name) || !event.tool_input || typeof event.tool_input !== "object") return {};
+    if (!event || event.hook_event_name !== "PreToolUse" || !TOOL_NAMES.has(event.tool_name)) return {};
+    if (!event.tool_input || typeof event.tool_input !== "object") throw new Error("native edit payload is missing");
     const target = await reconstruct(event, event.cwd || cwd, read, resolve);
     if (!supported(target.file.relative)) return {};
     const before = target.before === null ? [] : scan(target.before, { source: target.file.relative }).findings;
