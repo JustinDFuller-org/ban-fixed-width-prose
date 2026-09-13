@@ -1,5 +1,5 @@
 import path from "node:path";
-import { readFile } from "node:fs/promises";
+import { readFile, realpath } from "node:fs/promises";
 import { RECOGNIZED_EXTENSIONS, scanText } from "./scanner.js";
 import { newFindings } from "./codex-hook.js";
 
@@ -46,9 +46,34 @@ async function readCurrent(file, read) {
   }
 }
 
-async function reconstruct(event, cwd, read) {
+async function existingPath(value, resolve) {
+  let candidate = value;
+  let suffix = "";
+  while (true) {
+    try {
+      const resolved = await resolve(candidate);
+      return suffix ? path.join(resolved, suffix) : resolved;
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+      const parent = path.dirname(candidate);
+      if (parent === candidate) throw error;
+      suffix = suffix ? path.join(path.basename(candidate), suffix) : path.basename(candidate);
+      candidate = parent;
+    }
+  }
+}
+
+async function resolveWithinWorkspace(file, cwd, resolve) {
+  const workspace = await resolve(cwd);
+  const target = await existingPath(file.absolute, resolve);
+  const relative = path.relative(workspace, target);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error(`edit path escapes workspace through a symlink: ${file.relative}`);
+  return { ...file, absolute: target };
+}
+
+async function reconstruct(event, cwd, read, resolve = realpath) {
   const input = event.tool_input;
-  const file = normalizePath(input.file_path, cwd);
+  const file = await resolveWithinWorkspace(normalizePath(input.file_path, cwd), cwd, resolve);
   const before = await readCurrent(file, read);
   if (event.tool_name === "Write") {
     if (typeof input.content !== "string") throw new Error("Write content must be a string");
@@ -67,10 +92,10 @@ function findingMessage(findings) {
   return `Fixed-width prose detected at ${details}. Remove the physical wrap, or use an allowed structural/documentation form.`;
 }
 
-export async function evaluateClaudeHook(event, { mode = "hard-block", cwd = process.cwd(), read = readFile, scan = scanText } = {}) {
+export async function evaluateClaudeHook(event, { mode = "hard-block", cwd = process.cwd(), read = readFile, scan = scanText, resolve = realpath } = {}) {
   try {
     if (!event || event.hook_event_name !== "PreToolUse" || !TOOL_NAMES.has(event.tool_name) || !event.tool_input || typeof event.tool_input !== "object") return {};
-    const target = await reconstruct(event, event.cwd || cwd, read);
+    const target = await reconstruct(event, event.cwd || cwd, read, resolve);
     if (!supported(target.file.relative)) return {};
     const before = target.before === null ? [] : scan(target.before, { source: target.file.relative }).findings;
     const after = scan(target.after, { source: target.file.relative }).findings;
@@ -96,4 +121,4 @@ export async function main(args = process.argv.slice(2), io = {}) {
   }
 }
 
-export { normalizePath, replaceText, reconstruct };
+export { normalizePath, replaceText, reconstruct, resolveWithinWorkspace };

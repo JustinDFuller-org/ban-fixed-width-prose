@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import path from "node:path";
+import { mkdtemp, symlink, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { evaluateClaudeHook, main, normalizePath, replaceText, reconstruct } from "../src/claude-hook.js";
 
 const clean = "A complete sentence stays on one line.\n";
 const wrapped = "A complete sentence starts here.\nThe continuation is a finding.\n";
-const event = (tool_name, tool_input, cwd = "/workspace") => ({ hook_event_name: "PreToolUse", tool_name, tool_input, cwd });
+const event = (tool_name, tool_input, cwd = process.cwd()) => ({ hook_event_name: "PreToolUse", tool_name, tool_input: { ...tool_input, file_path: tool_input.file_path?.replace("/workspace/", `${cwd}/`) }, cwd });
 const read = async () => clean;
 
 test("native Write blocks wrapped prose and warns in warning mode", async () => {
@@ -17,12 +20,12 @@ test("native Write blocks wrapped prose and warns in warning mode", async () => 
 });
 
 test("native Edit reconstructs unique and replace_all replacements", async () => {
-  const unique = await reconstruct(event("Edit", { file_path: "/workspace/note.md", old_string: "complete", new_string: "short" }), "/workspace", read);
+  const unique = await reconstruct(event("Edit", { file_path: "/workspace/note.md", old_string: "complete", new_string: "short" }), process.cwd(), read);
   assert.equal(unique.after, "A short sentence stays on one line.\n");
   const repeatedRead = async () => "one one\n";
-  const all = await reconstruct(event("Edit", { file_path: "/workspace/note.md", old_string: "one", new_string: "two", replace_all: true }), "/workspace", repeatedRead);
+  const all = await reconstruct(event("Edit", { file_path: "/workspace/note.md", old_string: "one", new_string: "two", replace_all: true }), process.cwd(), repeatedRead);
   assert.equal(all.after, "two two\n");
-  await assert.rejects(() => reconstruct(event("Edit", { file_path: "/workspace/note.md", old_string: "one", new_string: "two" }), "/workspace", repeatedRead), /ambiguous/);
+  await assert.rejects(() => reconstruct(event("Edit", { file_path: "/workspace/note.md", old_string: "one", new_string: "two" }), process.cwd(), repeatedRead), /ambiguous/);
 });
 
 test("unsupported and unrelated native calls pass without policy output", async () => {
@@ -74,6 +77,29 @@ test("replacement requires strings", () => {
 });
 
 test("a new Write can evaluate without an event cwd", async () => {
-  const result = await evaluateClaudeHook({ hook_event_name: "PreToolUse", tool_name: "Write", tool_input: { file_path: "/workspace/note.md", content: clean } }, { cwd: "/workspace", read: async () => { const error = new Error("missing"); error.code = "ENOENT"; throw error; } });
+  const result = await evaluateClaudeHook(event("Write", { file_path: "/workspace/note.md", content: clean }), { read: async () => { const error = new Error("missing"); error.code = "ENOENT"; throw error; } });
   assert.deepEqual(result, {});
+});
+
+test("symlink targets outside the workspace fail open", async () => {
+  const workspace = await mkdtemp(path.join(tmpdir(), "fixed-width-prose-workspace-"));
+  const outside = await mkdtemp(path.join(tmpdir(), "fixed-width-prose-outside-"));
+  try {
+    await writeFile(path.join(outside, "note.md"), clean);
+    await symlink(path.join(outside, "note.md"), path.join(workspace, "link.md"));
+    const result = await evaluateClaudeHook({ hook_event_name: "PreToolUse", tool_name: "Write", cwd: workspace, tool_input: { file_path: path.join(workspace, "link.md"), content: wrapped } });
+    assert.match(result.hookSpecificOutput.additionalContext, /escapes workspace through a symlink/);
+  } finally {
+    await rm(workspace, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
+  }
+});
+
+test("real path resolution failures fail open", async () => {
+  const nested = await evaluateClaudeHook(event("Write", { file_path: "/workspace/nested/new.md", content: clean }), { read: async () => { const error = new Error("missing"); error.code = "ENOENT"; throw error; } });
+  assert.deepEqual(nested, {});
+  const operational = await evaluateClaudeHook(event("Write", { file_path: "/workspace/note.md", content: clean }), { resolve: async () => { throw new Error("resolve failed"); } });
+  assert.match(operational.hookSpecificOutput.additionalContext, /resolve failed/);
+  const missingRoot = await evaluateClaudeHook(event("Write", { file_path: "/workspace/note.md", content: clean }), { resolve: async () => { const error = new Error("root missing"); error.code = "ENOENT"; throw error; } });
+  assert.match(missingRoot.hookSpecificOutput.additionalContext, /root missing/);
 });
