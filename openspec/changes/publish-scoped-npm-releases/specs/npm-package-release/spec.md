@@ -25,7 +25,7 @@ Stable release tags matching v*.*.* and floating GitHub Action tags matching v* 
 
 ### Requirement: Stable releases publish the scoped npm package
 
-The release system SHALL publish @justindfuller/ban-fixed-width-prose as a public npm package when a verified stable v1.x.y release tag is processed, and the published package version SHALL equal the tag version without the leading v.
+The release system SHALL publish @justindfuller/ban-fixed-width-prose as a public npm package when a verified stable v*.*.* release tag is processed, and the published package version SHALL equal the tag version without the leading v.
 
 #### Scenario: Matching stable tag
 
