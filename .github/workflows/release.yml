@@ -53,10 +53,7 @@ jobs:
             exit 1
           fi
           if [ -z "$published_version" ]; then
-            npmrc="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
-            sed -i '/_authToken/d' "$npmrc"
-            unset NODE_AUTH_TOKEN
-            npm publish --access public --provenance --loglevel verbose
+            npm publish --access public
           fi
       - name: Smoke test published package
         run: |
