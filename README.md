@@ -81,7 +81,7 @@ Disable or remove the selected plugin to roll back its early guidance. This does
 This repository also includes a Claude Code marketplace with separately installable hard-block and warning plugins:
 
 ```sh
-claude plugin marketplace add .
+claude plugin marketplace add https://github.com/JustinDFuller-org/ban-fixed-width-prose.git
 claude plugin install ban-fixed-width-prose-hard-block@ban-fixed-width-prose
 # or:
 claude plugin install ban-fixed-width-prose-warn@ban-fixed-width-prose
