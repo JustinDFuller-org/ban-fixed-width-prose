@@ -18,7 +18,7 @@ for (const file of requiredFiles) {
   if (!files.has(file)) throw new Error("npm package is missing " + file);
 }
 for (const file of files) {
-  if (/^(?:\.github|coverage|node_modules|openspec|scripts|test)\//.test(file)) throw new Error("npm package includes excluded file " + file);
+  if ([".github/", "coverage/", "node_modules/", "openspec/", "scripts/", "test/"].some((prefix) => file.startsWith(prefix))) throw new Error("npm package includes excluded file " + file);
 }
 if (pack.name !== packageData.name || pack.version !== packageData.version) throw new Error("npm package metadata does not match package.json");
 if (packageData.name !== "@justindfuller/ban-fixed-width-prose") throw new Error("package name must use the @justindfuller scope");
