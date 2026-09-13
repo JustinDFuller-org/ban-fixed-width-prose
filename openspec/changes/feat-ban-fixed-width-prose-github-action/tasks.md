@@ -1,7 +1,7 @@
 ## 1. Git-aware repository discovery
 
-- [ ] 1.1 Extend default repository discovery to enumerate tracked and untracked-but-not-ignored files with standard Git exclusions, preserve the existing filesystem fallback outside Git worktrees, and verify behavior with nested `.gitignore`, `.git/info/exclude`, unavailable-Git, and tracked-ignored-file fixtures.
-- [ ] 1.2 Preserve explicit-source escape hatches and existing extension, skipped-directory, include, exclude, ordering, and error semantics, then verify the complete CLI and discovery integration suite passes.
+- [x] 1.1 Extend default repository discovery to enumerate tracked and untracked-but-not-ignored files with standard Git exclusions, preserve the existing filesystem fallback outside Git worktrees, and verify behavior with nested `.gitignore`, `.git/info/exclude`, unavailable-Git, and tracked-ignored-file fixtures.
+- [x] 1.2 Preserve explicit-source escape hatches and existing extension, skipped-directory, include, exclude, ordering, and error semantics, then verify the complete CLI and discovery integration suite passes.
 
 ## 2. Action interface and orchestration
 
