@@ -1,0 +1,20 @@
+name: Fixed-width prose
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  prose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          exclude: |
+            .agents/**
+            openspec/**
+            test/fixtures/**

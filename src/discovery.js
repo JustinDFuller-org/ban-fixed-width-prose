@@ -1,6 +1,10 @@
 import { promises as fs } from "node:fs";
+import { execFile } from "node:child_process";
 import path from "node:path";
+import { promisify } from "node:util";
 import { RECOGNIZED_EXTENSIONS, SKIPPED_DIRECTORIES, scanText } from "./scanner.js";
+
+const execFileAsync = promisify(execFile);
 
 function normalizePath(value) {
   return value.split(path.sep).join("/");
@@ -58,9 +62,36 @@ async function discover(root, options, relativeRoot = root) {
   return files;
 }
 
+async function gitDefaultFiles(cwd) {
+  const { stdout } = await execFileAsync("git", ["-C", cwd, "ls-files", "--cached", "--others", "--exclude-standard", "-z"], { encoding: "utf8" });
+  const { stdout: repositoryRoot } = await execFileAsync("git", ["-C", cwd, "rev-parse", "--show-toplevel"], { encoding: "utf8" });
+  const root = await fs.realpath(repositoryRoot.trim());
+  const realCwd = await fs.realpath(cwd);
+  return stdout.split("\0").filter(Boolean).map((relativePath) => path.resolve(root, relativePath)).filter((filePath) => filePath === realCwd || filePath.startsWith(`${realCwd}${path.sep}`)).map((filePath) => path.resolve(cwd, path.relative(realCwd, filePath)));
+}
+
+async function discoverDefault(cwd, options) {
+  try {
+    const candidates = await gitDefaultFiles(cwd);
+    const files = [];
+    for (const fullPath of candidates) {
+      if (!recognizedFile(fullPath)) continue;
+      const relativePath = displaySource(fullPath, cwd);
+      if (relativePath.split("/").some((part) => SKIPPED_DIRECTORIES.has(part))) continue;
+      if (!matchesAny(relativePath, options.include || [])) continue;
+      if ((options.exclude || []).some((pattern) => globToRegExp(normalizePath(pattern)).test(relativePath))) continue;
+      files.push(fullPath);
+    }
+    return files;
+  } catch {
+    return discover(cwd, options, cwd);
+  }
+}
+
 export async function sourcePaths(inputPaths = [], options = {}) {
   const cwd = path.resolve(options.cwd || process.cwd());
-  const paths = inputPaths.length > 0 ? inputPaths : [cwd];
+  if (inputPaths.length === 0) return (await discoverDefault(cwd, options)).sort((left, right) => displaySource(left, cwd).localeCompare(displaySource(right, cwd)));
+  const paths = inputPaths;
   const files = [];
   for (const input of paths) {
     const resolved = path.resolve(cwd, input);
@@ -78,11 +109,13 @@ function displaySource(filePath, cwd) {
 
 export async function scanPaths(inputPaths = [], options = {}) {
   const cwd = path.resolve(options.cwd || process.cwd());
-  const paths = inputPaths.length > 0 ? inputPaths : [cwd];
   const files = [];
   const discoveryErrors = [];
   const errors = [];
-  for (const input of paths) {
+  if (inputPaths.length === 0) {
+    files.push(...await discoverDefault(cwd, { ...options, cwd, errors: discoveryErrors }));
+  }
+  for (const input of inputPaths) {
     const resolved = path.resolve(cwd, input);
     try {
       const stats = await fs.stat(resolved);

@@ -1,0 +1,32 @@
+name: Ban fixed-width prose
+description: Detect hard-wrapped prose in repository documents and pull request descriptions
+author: Justin Fuller
+branding:
+  color: blue
+  icon: file-text
+runs:
+  using: node24
+  main: dist/index.js
+inputs:
+  paths:
+    description: Newline-separated files or directories to scan
+    required: false
+  include:
+    description: Newline-separated glob patterns to include
+    required: false
+  exclude:
+    description: Newline-separated glob patterns to exclude
+    required: false
+  debug:
+    description: Emit operational scan details
+    required: false
+    default: 'false'
+outputs:
+  finding-count:
+    description: Number of fixed-width prose findings
+  files-scanned:
+    description: Number of repository and pull request sources scanned
+  files-with-findings:
+    description: Number of sources containing findings
+  error-count:
+    description: Number of operational errors
