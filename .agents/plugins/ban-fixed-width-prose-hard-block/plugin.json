@@ -1,8 +1,0 @@
-{
-  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "name": "ban-fixed-width-prose-hard-block",
-  "version": "1.1.0",
-  "description": "Block newly introduced hard-wrapped prose in reconstructible Codex file edits.",
-  "author": { "name": "Justin Fuller" },
-  "extensions": { "com.openai": { "hooks": "./hooks/hooks.json" } }
-}

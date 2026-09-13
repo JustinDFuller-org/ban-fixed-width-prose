@@ -1,8 +1,0 @@
-{
-  "name": "ban-fixed-width-prose",
-  "owner": { "name": "Justin Fuller" },
-  "plugins": [
-    { "name": "ban-fixed-width-prose-hard-block", "source": { "source": "local", "path": "./.agents/plugins/ban-fixed-width-prose-hard-block" }, "version": "1.1.0", "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" }, "category": "Developer Tools", "install": "codex plugin add ban-fixed-width-prose-hard-block --marketplace ban-fixed-width-prose" },
-    { "name": "ban-fixed-width-prose-warn", "source": { "source": "local", "path": "./.agents/plugins/ban-fixed-width-prose-warn" }, "version": "1.1.0", "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" }, "category": "Developer Tools", "install": "codex plugin add ban-fixed-width-prose-warn --marketplace ban-fixed-width-prose" }
-  ]
-}

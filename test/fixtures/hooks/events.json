@@ -1,5 +1,0 @@
-{
-  "wrapped": { "hook_event_name": "PreToolUse", "tool_name": "file_edit", "tool_input": { "file_path": "wrapped.md" } },
-  "clean": { "hook_event_name": "PreToolUse", "tool_name": "file_edit", "tool_input": { "file_path": "clean.md" } },
-  "unsupported": { "hook_event_name": "PreToolUse", "tool_name": "file_edit", "tool_input": { "file_path": "unsupported.yaml" } }
-}

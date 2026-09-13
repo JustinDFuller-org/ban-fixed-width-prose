@@ -1,8 +1,0 @@
-{
-  "name": "ban-fixed-width-prose-hard-block",
-  "version": "1.1.0",
-  "description": "Block newly introduced hard-wrapped prose in reconstructible Codex file edits.",
-  "author": { "name": "Justin Fuller" },
-  "hooks": "./hooks/hooks.json",
-  "skills": ["./skills/no-fixed-width-prose"]
-}
