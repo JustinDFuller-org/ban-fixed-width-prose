@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
@@ -16,11 +16,14 @@ const pipe = (command, args, options, input) => new Promise((resolve, reject) =>
 
 const root = process.cwd();
 const repo = await mkdtemp(path.join(tmpdir(), "fixed-width-prose-claude-"));
+const outside = await mkdtemp(path.join(tmpdir(), "fixed-width-prose-claude-outside-"));
 const current = "Existing paragraph line.\nExisting continuation line.\n";
 try {
   await mkdir(path.join(repo, ".git"));
   await writeFile(path.join(repo, "note.md"), "Clean current content.\n");
   await writeFile(path.join(repo, "legacy.md"), current);
+  await writeFile(path.join(outside, "external.md"), "External content.\n");
+  await symlink(path.join(outside, "external.md"), path.join(repo, "link.md"));
   const event = (toolName, input) => JSON.stringify({ hook_event_name: "PreToolUse", tool_name: toolName, cwd: repo, tool_input: { file_path: path.join(repo, input.path), ...input } });
   const invoke = async (name, payload) => {
     const { stdout } = await pipe("node", [path.join(root, "claude-plugins", name, "bin/hook.mjs")], { cwd: repo, env: { ...process.env, CLAUDE_PLUGIN_ROOT: path.join(root, "claude-plugins", name) } }, payload);
@@ -37,9 +40,12 @@ try {
   const repair = await invoke("ban-fixed-width-prose-hard-block", event("Edit", { path: "legacy.md", old_string: current, new_string: "One repaired paragraph.\n" }));
   const malformed = await pipe("node", [path.join(root, "claude-plugins", "ban-fixed-width-prose-hard-block", "bin/hook.mjs")], { cwd: repo }, "not-json");
   const malformedResult = JSON.parse(malformed.stdout);
+  const symlinkResult = await invoke("ban-fixed-width-prose-hard-block", event("Write", { path: "link.md", content: wrapped }));
   if (Object.keys(clean).length || Object.keys(legacy).length || Object.keys(repair).length) throw new Error("clean, legacy, or repair edit was not allowed");
   if (!malformedResult.hookSpecificOutput?.additionalContext) throw new Error("malformed input did not provide diagnostics");
-  console.log("claude-smoke-ok hard=deny warn=context clean=allow legacy=allow repair=allow malformed=context");
+  if (!symlinkResult.hookSpecificOutput?.additionalContext?.includes("symlink")) throw new Error("symlink escape did not fail open");
+  console.log("claude-smoke-ok hard=deny warn=context clean=allow legacy=allow repair=allow malformed=context symlink=context");
 } finally {
   await rm(repo, { recursive: true, force: true });
+  await rm(outside, { recursive: true, force: true });
 }
