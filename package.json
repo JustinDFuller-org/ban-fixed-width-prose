@@ -1,6 +1,6 @@
 {
   "name": "@justindfuller/ban-fixed-width-prose",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Detect and ban hard-wrapped prose in Markdown and text files",
   "type": "module",
   "repository": {
