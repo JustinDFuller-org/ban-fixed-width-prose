@@ -20,7 +20,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
-      - run: npm run check-release -- "$GITHUB_REF_NAME"
+      - run: node scripts/validate-release.mjs "$GITHUB_REF_NAME"
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
