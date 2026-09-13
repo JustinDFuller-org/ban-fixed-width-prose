@@ -42,7 +42,7 @@ test("renders help and version", async () => {
   assert.equal(help.code, 0);
   assert.equal(help.stdout, helpText());
   assert.equal(version.code, 0);
-  assert.match(version.stdout, /^1\.1\.0\n$/);
+  assert.match(version.stdout, /^1\.2\.0\n$/);
 });
 
 test("scans stdin and renders JSON", async () => {

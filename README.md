@@ -76,6 +76,21 @@ Coverage is limited to `.md`, `.markdown`, `.mdown`, `.mkdn`, `.mdx`, and `.txt`
 
 Disable or remove the selected plugin to roll back its early guidance. This does not change the CLI or Action behavior.
 
+## Claude Code plugins
+
+This repository also includes a Claude Code marketplace with separately installable hard-block and warning plugins:
+
+```sh
+claude plugin marketplace add .
+claude plugin install ban-fixed-width-prose-hard-block@ban-fixed-width-prose
+# or:
+claude plugin install ban-fixed-width-prose-warn@ban-fixed-width-prose
+```
+
+Choose one severity variant, review and trust its hooks through `/plugin` and `/hooks`, and use `claude plugin validate --strict` or `claude --plugin-dir claude-plugins/ban-fixed-width-prose-hard-block` for local verification. Version `1.2.0` supports native `Write` and `Edit` calls for the recognized Markdown-family and plain-text extensions. The hook compares current and proposed content, reports only newly introduced findings, and fails open with visible operational context when an event, path, reconstruction, or scan cannot be evaluated. Opaque shell writes, generators, redirects, MCP writers, and specialized tools remain outside the native boundary; use the CLI or GitHub Action for final enforcement.
+
+Disable or uninstall the selected Claude plugin to roll back its early guidance. This does not change the CLI, Action, or Codex plugin behavior.
+
 ## Development
 
 Run `npm ci` with Node.js 24, `npm test` for the test suite, and `npm run coverage` for Cobertura output and the enforced 90% line-and-branch coverage gate.

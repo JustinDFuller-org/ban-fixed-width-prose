@@ -1,6 +1,6 @@
 {
   "name": "ban-fixed-width-prose",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Detect and ban hard-wrapped prose in Markdown and text files",
   "type": "module",
   "engines": {
@@ -23,11 +23,12 @@
     "coverage": "c8 --reporter=text --reporter=cobertura --check-coverage --lines=90 --branches=90 node --test",
     "build": "ncc build src/action.js --minify -o dist",
     "check-action": "node scripts/validate-action.mjs",
-    "check-release": "node scripts/validate-release.mjs v1.1.0",
+    "check-release": "node scripts/validate-release.mjs v1.2.0",
     "check-bundle": "npm run build && git diff --exit-code -- dist/index.js",
     "build-plugins": "node scripts/build-plugins.mjs",
     "check-plugins": "node scripts/validate-plugins.mjs",
     "smoke-codex": "node scripts/smoke-codex.mjs",
+    "smoke-claude": "node scripts/smoke-claude.mjs",
     "check": "npm test && npm run coverage && npm run check-action && npm run check-bundle && npm run build-plugins && npm run check-plugins"
   },
   "devDependencies": {

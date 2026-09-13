@@ -1,0 +1,7 @@
+{
+  "name": "ban-fixed-width-prose-hard-block",
+  "version": "1.2.0",
+  "description": "Block newly introduced hard-wrapped prose in native Claude file edits.",
+  "author": { "name": "JustinDFuller-org" },
+  "hooks": "./hooks/hooks.json"
+}

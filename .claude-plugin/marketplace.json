@@ -1,0 +1,9 @@
+{
+  "name": "ban-fixed-width-prose",
+  "owner": { "name": "JustinDFuller-org" },
+  "metadata": { "description": "Claude Code plugins for fixed-width prose enforcement.", "version": "1.2.0" },
+  "plugins": [
+    { "name": "ban-fixed-width-prose-hard-block", "source": "./claude-plugins/ban-fixed-width-prose-hard-block", "description": "Block newly introduced hard-wrapped prose in native Claude file edits.", "version": "1.2.0" },
+    { "name": "ban-fixed-width-prose-warn", "source": "./claude-plugins/ban-fixed-width-prose-warn", "description": "Warn about newly introduced hard-wrapped prose in native Claude file edits.", "version": "1.2.0" }
+  ]
+}
