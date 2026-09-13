@@ -7,6 +7,7 @@ import { spawn } from "node:child_process";
 import { helpText, main, parseArgs } from "../src/cli.js";
 import { scanPaths } from "../src/discovery.js";
 import * as packageExports from "../src/index.js";
+import packageData from "../package.json" with { type: "json" };
 
 function stream() {
   return { value: "", write(chunk) { this.value += chunk; } };
@@ -42,7 +43,7 @@ test("renders help and version", async () => {
   assert.equal(help.code, 0);
   assert.equal(help.stdout, helpText());
   assert.equal(version.code, 0);
-  assert.match(version.stdout, /^1\.2\.3\n$/);
+  assert.equal(version.stdout, `${packageData.version}\n`);
 });
 
 test("scans stdin and renders JSON", async () => {
