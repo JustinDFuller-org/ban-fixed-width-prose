@@ -22,6 +22,6 @@
 
 ## 5. Release and hosted proof
 
-- [ ] 5.1 Add version/tag coupling and release automation for stable semantic versions plus the moving `v1` major reference, with guards against publishing inconsistent package, metadata, and bundle versions; verify release validation locally.
-- [ ] 5.2 Add a manually dispatchable and release-triggered smoke workflow with Ubuntu, macOS, and Windows jobs that runs the published artifact against clean, finding, and operational-error cases and asserts the expected outputs and failure statuses.
+- [x] 5.1 Add version/tag coupling and release automation for stable semantic versions plus the moving `v1` major reference, with guards against publishing inconsistent package, metadata, and bundle versions; verify release validation locally.
+- [x] 5.2 Add a manually dispatchable and release-triggered smoke workflow with Ubuntu, macOS, and Windows jobs that runs the published artifact against clean, finding, and operational-error cases and asserts the expected outputs and failure statuses.
 - [ ] 5.3 Run the full local validation suite, strict OpenSpec validation, generated-bundle checks, and release checks, then record hosted release-smoke evidence before marking the change ready to archive.

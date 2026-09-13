@@ -1,0 +1,48 @@
+name: Released Action smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Released version or major tag to test
+        required: true
+        default: v1
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: clean
+        continue-on-error: true
+        uses: JustinDFuller-org/ban-fixed-width-prose@${{ inputs.version || github.event.release.tag_name }}
+        with:
+          paths: test/fixtures/clean.md
+      - if: steps.clean.outcome != 'success' || steps.clean.outputs.finding-count != '0' || steps.clean.outputs.error-count != '0'
+        shell: bash
+        run: exit 1
+      - id: finding
+        continue-on-error: true
+        uses: JustinDFuller-org/ban-fixed-width-prose@${{ inputs.version || github.event.release.tag_name }}
+        with:
+          paths: test/fixtures/wrapped.md
+      - if: steps.finding.outcome != 'failure' || steps.finding.outputs.finding-count == '0' || steps.finding.outputs.error-count != '0'
+        shell: bash
+        run: exit 1
+      - id: error
+        continue-on-error: true
+        uses: JustinDFuller-org/ban-fixed-width-prose@${{ inputs.version || github.event.release.tag_name }}
+        with:
+          paths: test/fixtures/missing.md
+      - if: steps.error.outcome != 'failure' || steps.error.outputs.finding-count != '0' || steps.error.outputs.error-count == '0'
+        shell: bash
+        run: exit 1
