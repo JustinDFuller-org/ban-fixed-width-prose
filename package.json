@@ -37,7 +37,8 @@
     "check-plugins": "node scripts/validate-plugins.mjs",
     "smoke-codex": "node scripts/smoke-codex.mjs",
     "smoke-claude": "node scripts/smoke-claude.mjs",
-    "check": "npm test && npm run coverage && npm run check-action && npm run check-release && npm run check-package && npm run check-bundle && npm run build-plugins && npm run check-plugins"
+    "check": "npm test && npm run coverage && npm run check-action && npm run check-release && npm run check-package && npm run check-bundle && npm run build-plugins && npm run check-plugins",
+    "smoke-cursor": "node scripts/smoke-cursor.mjs"
   },
   "devDependencies": {
     "@actions/core": "^1.11.1",

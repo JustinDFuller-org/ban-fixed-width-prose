@@ -104,14 +104,15 @@ Disable or uninstall the selected Claude plugin to roll back its early guidance.
 
 ## Cursor CLI plugins
 
-This repository includes a native Cursor CLI marketplace with separately installable hard-block and warning plugins:
+This repository includes a native Cursor CLI marketplace with separately installable hard-block and warning plugins. For the current Cursor CLI, load one local plugin directly:
 
 ```sh
-cursor-agent plugins marketplace add .
-cursor-agent plugins install ban-fixed-width-prose-hard-block@ban-fixed-width-prose
+cursor-agent --plugin-dir ./cursor-plugins/ban-fixed-width-prose-hard-block
 # or:
-cursor-agent plugins install ban-fixed-width-prose-warn@ban-fixed-width-prose
+cursor-agent --plugin-dir ./cursor-plugins/ban-fixed-width-prose-warn
 ```
+
+The root .cursor-plugin/marketplace.json is prepared for Cursor marketplace import where marketplace management is available.
 
 Choose one severity variant and enable its hooks. The hard-block plugin denies supported, reconstructible `preToolUse` Write/Edit events that introduce new findings. The warning plugin permits the edit and adds finding-scoped `postToolUse` context after the successful write. Both variants compare findings by reason and excerpt, so unchanged legacy findings do not block unrelated edits and repairs are allowed.
 

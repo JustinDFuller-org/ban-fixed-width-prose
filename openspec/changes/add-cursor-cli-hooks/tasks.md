@@ -18,4 +18,4 @@
 
 - [x] 4.1 Add focused Cursor fixtures and unit/integration tests for hard-block, warning, structural Markdown, offline execution, and operational failures; verify the complete Node test and coverage gates pass
 - [ ] 4.2 Run a disposable real Cursor CLI smoke using the installed CLI and local plugin path; verify actual file contents and hard=deny, warn=post-write-context, clean=allow, legacy=allow, repair=allow, unsupported=allow, and malformed=diagnostic outcomes
-- [ ] 4.3 Run strict OpenSpec and repository validation; verify openspec validate --changes --strict --no-interactive and the full project check pass
+- [x] 4.3 Run strict OpenSpec and repository validation; verify openspec validate --changes --strict --no-interactive and the full project check pass

@@ -29,9 +29,9 @@ function supported(relative) {
   return RECOGNIZED_EXTENSIONS.has(path.extname(relative).toLowerCase());
 }
 
-function workspaceRoot(event, cwd) {
-  const roots = Array.isArray(event && event.workspace_roots) ? event.workspace_roots : [];
-  return (event && (event.workspace_root || roots[0] || event.cwd)) || cwd;
+function workspaceRoots(event, cwd) {
+  const roots = Array.isArray(event && event.workspace_roots) ? event.workspace_roots.filter((value) => typeof value === "string" && value !== "") : [];
+  return roots.length ? roots : [(event && (event.workspace_root || event.cwd)) || cwd];
 }
 
 function normalizePath(value, cwd) {
@@ -65,13 +65,21 @@ async function existingPath(value, resolve, inspect = lstat) {
   }
 }
 
-async function safeFile(value, root, resolve = realpath) {
-  const file = normalizePath(value, root);
-  const workspace = await resolve(root);
-  const target = await existingPath(file.absolute, resolve);
-  const relative = path.relative(workspace, target);
-  if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("edit path escapes workspace through a symlink: " + file.relative);
-  return { ...file, absolute: target, relative };
+async function safeFile(value, roots, resolve = realpath) {
+  let lastError;
+  for (const root of roots) {
+    try {
+      const file = normalizePath(value, root);
+      const workspace = await resolve(root);
+      const target = await existingPath(file.absolute, resolve);
+      const relative = path.relative(workspace, target);
+      if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("edit path escapes workspace through a symlink: " + file.relative);
+      return { ...file, absolute: target, relative, workspace };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error("no workspace root was available");
 }
 
 async function current(file, read) {
@@ -88,10 +96,10 @@ function replaceText(content, oldString, newString, replaceAll) {
   return replaceAll ? content.split(oldString).join(newString) : content.replace(oldString, newString);
 }
 
-async function reconstruct(event, root, read, resolve) {
+async function reconstruct(event, roots, read, resolve) {
   const input = event.tool_input || event.toolInput;
   if (!input || typeof input !== "object") throw new Error("native edit payload is missing");
-  const file = await safeFile(input.file_path || input.path, root, resolve);
+  const file = await safeFile(input.file_path || input.path, roots, resolve);
   const before = await current(file, read);
   const toolName = event.tool_name || event.toolName;
   if (toolName === "Write") {
@@ -152,9 +160,13 @@ async function saveState(file, record) {
 }
 
 async function consumeState(file, read, remove) {
-  const record = JSON.parse(await read(file, "utf8"));
-  await remove(file);
-  return record;
+  const claimed = file + "." + process.pid + "." + crypto.randomBytes(6).toString("hex") + ".consumed";
+  await rename(file, claimed);
+  try {
+    return JSON.parse(await read(claimed, "utf8"));
+  } finally {
+    await remove(claimed);
+  }
 }
 
 function defaultStateDir() {
@@ -166,31 +178,31 @@ export async function evaluateCursorHook(event, options = {}) {
   const post = phase(event) === "posttooluse";
   try {
     if (!event || (!post && phase(event) !== "pretooluse") || !TOOLS.has(event.tool_name || event.toolName)) return {};
-    const root = workspaceRoot(event, options.cwd || process.cwd());
+    const roots = workspaceRoots(event, options.cwd || process.cwd());
     const input = event.tool_input || event.toolInput;
     const fileValue = input && (input.file_path || input.path);
     if (post) {
-      const file = await safeFile(fileValue, root, options.resolve || realpath);
+      const file = await safeFile(fileValue, roots, options.resolve || realpath);
       if (!supported(file.relative)) return {};
-      const values = identity(event, root, file.absolute);
+      const values = identity(event, file.workspace, file.absolute);
       if (!values) return diagnostic("the event has no stable conversation, generation, tool-use, or file identity", true);
       const stateDir = options.stateDir || defaultStateDir();
       const record = await consumeState(statePath(stateDir, values), options.read || readFile, options.remove || unlink);
       if (JSON.stringify(record.identity) !== JSON.stringify(values)) return diagnostic("warning state did not match this event", true);
       return record.findings.length ? { additional_context: messageFor(record.findings) } : {};
     }
-    const target = await reconstruct(event, root, options.read || readFile, options.resolve || realpath);
+    const target = await reconstruct(event, roots, options.read || readFile, options.resolve || realpath);
     if (!supported(target.file.relative)) return {};
     const before = target.before === null ? [] : (options.scan || scanText)(target.before, { source: target.file.relative }).findings;
     const after = (options.scan || scanText)(target.after, { source: target.file.relative }).findings;
     const findings = newFindings(before, after);
     if (mode === "hard-block") return findings.length ? deny(messageFor(findings)) : {};
-    const values = identity(event, root, target.file.absolute);
+    const values = identity(event, target.file.workspace, target.file.absolute);
     if (!values) return diagnostic("the event has no stable conversation, generation, tool-use, or file identity", post);
     const stateDir = options.stateDir || defaultStateDir();
     const pathName = statePath(stateDir, values);
     await cleanup(stateDir, Date.now(), options.ttl || TTL_MS);
-    if (findings.length) await saveState({ dir: stateDir, path: pathName }, { identity: values, createdAt: Date.now(), findings });
+    await saveState({ dir: stateDir, path: pathName }, { identity: values, createdAt: Date.now(), findings });
     return {};
   } catch (error) {
     return diagnostic(error.message, post);

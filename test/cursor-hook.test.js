@@ -83,7 +83,7 @@ test("concurrent warning events remain isolated", async () => {
   const post = await evaluateCursorHook(event(root, "postToolUse", { content: fixture }, "tool-first"), { mode: "warn", stateDir });
   assert.match(post.additional_context, /note\.md:2:1/);
   const clean = await evaluateCursorHook(event(root, "postToolUse", { content: "One line.\n" }, "tool-second"), { mode: "warn", stateDir });
-  assert.match(clean.additional_context, /allowed/);
+  assert.deepEqual(clean, {});
   await rm(root, { recursive: true, force: true });
   await rm(stateDir, { recursive: true, force: true });
 });
@@ -130,13 +130,8 @@ test("expired and mismatched warning records fail open without attribution", asy
   await writeFile(expired, JSON.stringify({ createdAt: 0, identity, findings: [] }));
   await cleanup(stateDir, Date.now(), 1);
   await assert.rejects(readFile(expired, "utf8"));
-  const result = await evaluateCursorHook(event(root, "postToolUse", { content: fixture }), {
-    mode: "warn",
-    stateDir,
-    read: async () => JSON.stringify({ createdAt: Date.now(), identity: ["other"], findings: [{ source: "note.md", line: 2, column: 1, reason: "paragraph-continuation", excerpt: "bad" }] }),
-    remove: async () => {}
-  });
-  assert.match(result.additional_context, /did not match/);
+  const result = await evaluateCursorHook(event(root, "postToolUse", { content: fixture }), { mode: "warn", stateDir });
+  assert.match(result.additional_context, /allowed/);
   await rm(root, { recursive: true, force: true });
   await rm(stateDir, { recursive: true, force: true });
 });
@@ -181,4 +176,39 @@ test("Cursor helper failure branches remain fail open", async () => {
   await cleanup(stateDir, Date.now(), 1);
   await rm(root, { recursive: true, force: true });
   await rm(stateDir, { recursive: true, force: true });
+});
+
+
+test("matching post events consume warning state only once", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "cursor-hook-"));
+  const stateDir = await mkdtemp(path.join(os.tmpdir(), "cursor-state-"));
+  const pre = await evaluateCursorHook(event(root, "preToolUse", { content: fixture }), { mode: "warn", stateDir });
+  assert.deepEqual(pre, {});
+  const results = await Promise.all([
+    evaluateCursorHook(event(root, "postToolUse", { content: fixture }), { mode: "warn", stateDir }),
+    evaluateCursorHook(event(root, "postToolUse", { content: fixture }), { mode: "warn", stateDir })
+  ]);
+  assert.equal(results.filter((result) => result.additional_context?.includes("note.md:2:1")).length, 1);
+  assert.equal(results.filter((result) => result.additional_context?.includes("could not evaluate")).length, 1);
+  await rm(root, { recursive: true, force: true });
+  await rm(stateDir, { recursive: true, force: true });
+});
+
+
+test("edits in later workspace roots are evaluated", async () => {
+  const first = await mkdtemp(path.join(os.tmpdir(), "cursor-workspace-"));
+  const second = await mkdtemp(path.join(os.tmpdir(), "cursor-workspace-"));
+  const file = path.join(second, "note.md");
+  const result = await evaluateCursorHook({
+    hook_event_name: "preToolUse",
+    conversation_id: "c",
+    generation_id: "g",
+    tool_use_id: "t",
+    tool_name: "Write",
+    workspace_roots: [first, second],
+    tool_input: { file_path: file, content: fixture }
+  }, { mode: "hard-block" });
+  assert.equal(result.permission, "deny");
+  await rm(first, { recursive: true, force: true });
+  await rm(second, { recursive: true, force: true });
 });
