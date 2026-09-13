@@ -22,7 +22,7 @@ for (const entry of claudeMarketplace.plugins) {
   if (entry.version !== "1.2.0" || typeof entry.source !== "string" || !entry.source.startsWith("./claude-plugins/")) throw new Error(`invalid Claude marketplace entry for ${entry.name}`);
   const plugin = path.join(root, entry.source.slice(2));
   const metadata = JSON.parse(await readFile(path.join(plugin, ".claude-plugin/plugin.json"), "utf8"));
-  if (metadata.name !== entry.name || metadata.version !== "1.2.0" || metadata.hooks !== "./hooks/hooks.json") throw new Error(`invalid Claude metadata for ${entry.name}`);
+  if (metadata.name !== entry.name || metadata.version !== "1.2.0" || metadata.hooks) throw new Error(`invalid Claude metadata for ${entry.name}`);
   const hooks = JSON.parse(await readFile(path.join(plugin, "hooks/hooks.json"), "utf8"));
   const registration = hooks.hooks?.PreToolUse?.[0];
   if (registration?.matcher !== "Write|Edit" || registration.hooks?.[0]?.type !== "command" || !registration.hooks[0].command.includes("${CLAUDE_PLUGIN_ROOT}") || !registration.hooks[0].command.endsWith("/bin/hook.mjs")) throw new Error(`invalid Claude hook config for ${entry.name}`);

@@ -20,6 +20,7 @@ function deny(message) {
 function normalizePath(value, cwd) {
   if (typeof value !== "string" || value.trim() === "") throw new Error("native edit is missing an absolute file path");
   const normalized = value.split("\\").join(path.sep);
+  if (!path.isAbsolute(normalized)) throw new Error(`native edit path must be absolute: ${value}`);
   const absolute = path.resolve(cwd, normalized);
   const relative = path.relative(cwd, absolute);
   if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error(`edit path escapes workspace: ${value}`);
