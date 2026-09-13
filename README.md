@@ -16,6 +16,13 @@ ban-fixed-width-prose README.md docs
 printf 'First line.\nSecond line.\n' | ban-fixed-width-prose --stdin
 ```
 
+Install the public npm package to use the CLI or JavaScript API:
+
+```sh
+npm install @justindfuller/ban-fixed-width-prose
+npx @justindfuller/ban-fixed-width-prose README.md
+```
+
 The recursive scan recognizes `.md`, `.markdown`, `.mdown`, `.mkdn`, `.mdx`, and `.txt` files and skips `.git`, `node_modules`, `vendor`, `dist`, `build`, and `coverage` directories.
 
 Use repeatable `--include` and `--exclude` patterns to control discovery. Use `--format text` for concise location output; JSON is the default. `--debug` writes operational diagnostics to stderr.
@@ -34,7 +41,11 @@ JSON output contains `findings`, `summary`, and `errors`. Each finding contains 
 
 ## JavaScript API
 
-Import `scanText` for text input and `scanPaths` for files or directories. Both return the normalized findings, summary, and errors used by the CLI.
+Import `scanText` for text input and `scanPaths` for files or directories from the scoped package. Both return the normalized findings, summary, and errors used by the CLI.
+
+```js
+import { scanPaths, scanText } from "@justindfuller/ban-fixed-width-prose";
+```
 
 ## GitHub Action
 
