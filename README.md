@@ -102,6 +102,14 @@ Choose one severity variant, review and trust its hooks through `/plugin` and `/
 
 Disable or uninstall the selected Claude plugin to roll back its early guidance. This does not change the CLI, Action, or Codex plugin behavior.
 
+## Releases
+
+Stable releases begin automatically when an administrator pushes a protected `vMAJOR.MINOR.PATCH` tag on the current `main` commit. The release workflow validates the package, creates a checksum-protected npm tarball, and stages that exact artifact through the protected `npm-publish` environment.
+
+The staged package is not public until a maintainer reviews it in npm's Staged Packages tab and approves it with npm two-factor authentication. Use `npm stage list`, `npm stage view`, and `npm stage download` to inspect a pending stage; use `npm stage approve <stage-id>` to publish it or `npm stage reject <stage-id>` to discard it. Resolve or reject an existing stage before retrying the same package version.
+
+After approval, verify the exact scoped version from the public registry in a clean temporary directory and run `ban-fixed-width-prose --version`. CI uses npm trusted publishing through GitHub Actions OIDC and does not require a long-lived npm publish token.
+
 ## Development
 
 Run `npm ci` with Node.js 24, `npm test` for the test suite, and `npm run coverage` for Cobertura output and the enforced 90% line-and-branch coverage gate.
