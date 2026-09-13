@@ -20,5 +20,5 @@
 ## 4. Integration Verification
 
 - [x] 4.1 Add fixture-backed Claude adapter tests and an isolated launcher smoke harness covering hard denial, warning context, clean allowance, unchanged legacy findings, repairs, and visible fail-open diagnostics; verify the harness passes for both plugin variants
-- [ ] 4.2 Exercise Claude plugin loading with `claude --plugin-dir` or the equivalent local plugin workflow and verify `/hooks` or debug output reports the expected `PreToolUse` registrations
+- [x] 4.2 Exercise Claude plugin loading with `claude --plugin-dir` or the equivalent local plugin workflow and verify `/hooks` or debug output reports the expected `PreToolUse` registrations
 - [x] 4.3 Run the complete Node test, coverage, Action, bundle, Codex plugin, Claude plugin, and OpenSpec strict validation commands; verify all required artifacts and checks pass before implementation handoff
