@@ -53,9 +53,7 @@ jobs:
             exit 1
           fi
           if [ -z "$published_version" ]; then
-            unset NODE_AUTH_TOKEN
-            npm config delete //registry.npmjs.org/:_authToken || true
-            npm publish --access public --provenance --loglevel verbose
+            npm publish --access public
           fi
       - name: Smoke test published package
         run: |
