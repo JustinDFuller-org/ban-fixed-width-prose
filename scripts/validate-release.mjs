@@ -2,8 +2,9 @@ import { readFile } from "node:fs/promises";
 
 const packageData = JSON.parse(await readFile("package.json", "utf8"));
 const lockData = JSON.parse(await readFile("package-lock.json", "utf8"));
-const requestedTag = process.argv[2] || process.env.GITHUB_REF_NAME;
-const tag = requestedTag || "v" + packageData.version;
+const requestedTag = process.argv[2];
+const environmentTag = process.env.GITHUB_REF_NAME;
+const tag = requestedTag || (/^v\d+\.\d+\.\d+$/.test(environmentTag || "") ? environmentTag : "v" + packageData.version);
 if (!/^v\d+\.\d+\.\d+$/.test(tag)) throw new Error("unsupported stable release tag: " + tag);
 const version = tag.slice(1);
 if (packageData.version !== version || lockData.version !== version || lockData.packages?.[""].version !== version) throw new Error("release " + version + " does not match package metadata");
