@@ -40,7 +40,11 @@ function aggregate(repository, pullRequest) {
 }
 
 function findingRow(finding) {
-  return [finding.source, `${finding.line}:${finding.column}`, finding.reason, finding.excerpt];
+  return [finding.source, `${finding.line}:${finding.column}`, finding.reason, finding.excerpt].map(escapeHtml);
+}
+
+function escapeHtml(value) {
+  return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 }
 
 async function report(coreApi, result) {
@@ -58,11 +62,12 @@ async function report(coreApi, result) {
     ["Operational errors", String(result.summary.errorCount)]
   ]);
   if (result.findings.length > 0) summary.addHeading("Findings").addTable([["Source", "Location", "Reason", "Excerpt"], ...result.findings.map(findingRow)]);
-  if (result.errors.length > 0) summary.addHeading("Operational errors").addRaw(result.errors.join("\n"));
+  if (result.errors.length > 0) summary.addHeading("Operational errors").addRaw(result.errors.map(escapeHtml).join("\n"));
   await summary.write();
 }
 
 export async function run({ coreApi = core, fsApi = fs, env = process.env } = {}) {
+  let result = null;
   try {
     const inputs = parseInputs(coreApi);
     const repository = await scanPaths(inputs.paths, inputs);
@@ -74,13 +79,19 @@ export async function run({ coreApi = core, fsApi = fs, env = process.env } = {}
     } catch (error) {
       pullRequest = { findings: [], errors: [`pull-request-description: ${error.message}`], summary: { filesScanned: 0 } };
     }
-    const result = aggregate(repository, pullRequest);
+    result = aggregate(repository, pullRequest);
     await report(coreApi, result);
     if (result.findings.length > 0 || result.errors.length > 0) coreApi.setFailed("Fixed-width prose scan failed");
     return result;
   } catch (error) {
-    const result = { findings: [], errors: [error.message], summary: { findingCount: 0, filesScanned: 0, filesWithFindings: 0, errorCount: 1 } };
-    await report(coreApi, result);
+    result = result
+      ? { ...result, errors: [...result.errors, `reporting: ${error.message}`], summary: { ...result.summary, errorCount: result.errors.length + 1 } }
+      : { findings: [], errors: [error.message], summary: { findingCount: 0, filesScanned: 0, filesWithFindings: 0, errorCount: 1 } };
+    try {
+      await report(coreApi, result);
+    } catch (reportError) {
+      coreApi.error(`reporting: ${reportError.message}`);
+    }
     coreApi.setFailed(`Fixed-width prose action error: ${error.message}`);
     return result;
   }

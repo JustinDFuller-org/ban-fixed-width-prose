@@ -5,7 +5,7 @@ import { parseInputs, run } from "../src/action.js";
 function harness(inputs = {}, event = null) {
   const outputs = {};
   const errors = [];
-  const summary = { addHeading() { return this; }, addTable() { return this; }, addRaw() { return this; }, async write() { this.written = true; } };
+  const summary = { tables: [], raws: [], addHeading() { return this; }, addTable(rows) { this.tables.push(rows); return this; }, addRaw(text) { this.raws.push(text); return this; }, async write() { this.written = true; } };
   return {
     coreApi: {
       getInput(name) { return inputs[name] || ""; },
@@ -53,6 +53,13 @@ test("does not interpret untrusted finding data as workflow commands", async () 
   assert.ok(h.errors.every((item) => !item.startsWith("::")));
 });
 
+test("escapes untrusted finding data in the Step Summary", async () => {
+  const h = harness({}, { pull_request: { body: "First line.\nSecond line 1 < 2" } });
+  await run(h);
+  assert.match(JSON.stringify(h.summary.tables), /&lt;/);
+  assert.doesNotMatch(JSON.stringify(h.summary.tables), /Second line 1 < 2/);
+});
+
 test("reports event payload errors distinctly", async () => {
   const h = harness();
   h.env = { GITHUB_EVENT_NAME: "pull_request", GITHUB_EVENT_PATH: "missing" };
@@ -71,4 +78,12 @@ test("reports invalid inputs with outputs and a summary", async () => {
   assert.equal(h.outputs["error-count"], 1);
   assert.equal(h.outputs["finding-count"], 0);
   assert.equal(h.summary.written, true);
+});
+
+test("sets failure state when summary writing fails", async () => {
+  const h = harness({ paths: "test/fixtures/clean.md" });
+  h.summary.write = async () => { throw new Error("summary unavailable"); };
+  const result = await run(h);
+  assert.equal(result.summary.errorCount, 1);
+  assert.match(h.errors.join("\n"), /failed:Fixed-width prose action error/);
 });
