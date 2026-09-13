@@ -102,6 +102,22 @@ Choose one severity variant, review and trust its hooks through `/plugin` and `/
 
 Disable or uninstall the selected Claude plugin to roll back its early guidance. This does not change the CLI, Action, or Codex plugin behavior.
 
-## Development
+## Cursor CLI plugins
+
+This repository includes a native Cursor CLI marketplace with separately installable hard-block and warning plugins. For the current Cursor CLI, load one local plugin directly:
+
+```sh
+cursor-agent --plugin-dir ./cursor-plugins/ban-fixed-width-prose-hard-block
+# or:
+cursor-agent --plugin-dir ./cursor-plugins/ban-fixed-width-prose-warn
+```
+
+The root .cursor-plugin/marketplace.json is prepared for Cursor marketplace import where marketplace management is available.
+
+Choose one severity variant and enable its hooks. The hard-block plugin denies supported, reconstructible `preToolUse` Write/Edit events that introduce new findings. The warning plugin permits the edit and adds finding-scoped `postToolUse` context after the successful write. Both variants compare findings by reason and excerpt, so unchanged legacy findings do not block unrelated edits and repairs are allowed.
+
+Warnings are advisory and only new fixed-width-prose findings are in scope. The integration covers `.md`, `.markdown`, `.mdown`, `.mkdn`, `.mdx`, and `.txt` paths. Malformed events, unsafe paths, reconstruction failures, missing correlation, temporary-state failures, and scanner failures fail open with an operational diagnostic. Opaque shell writes, generators, redirections, MCP writers, and specialized tool paths may not be reconstructible; use the CLI or GitHub Action for final enforcement.
+
+Disable or uninstall the selected Cursor plugin to roll back its early guidance. This does not change the CLI, Action, Codex, or Claude behavior.
 
 Run `npm ci` with Node.js 24, `npm test` for the test suite, and `npm run coverage` for Cobertura output and the enforced 90% line-and-branch coverage gate.

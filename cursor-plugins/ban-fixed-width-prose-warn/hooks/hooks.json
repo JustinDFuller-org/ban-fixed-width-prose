@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CURSOR_PLUGIN_ROOT}/bin/hook.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "postToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CURSOR_PLUGIN_ROOT}/bin/hook.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

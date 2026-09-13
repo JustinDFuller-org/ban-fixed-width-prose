@@ -1,0 +1,7 @@
+{
+  "name": "ban-fixed-width-prose-hard-block",
+  "version": "1.3.0",
+  "description": "Block newly introduced hard-wrapped prose in native Cursor file edits.",
+  "author": { "name": "Justin Fuller" },
+  "skills": ["./skills/no-fixed-width-prose"]
+}
