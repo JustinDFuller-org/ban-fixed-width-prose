@@ -16,4 +16,4 @@
 - [ ] 3.1 Configure the npm trusted publisher for `JustinDFuller-org/ban-fixed-width-prose`, `release.yml`, and `npm-publish`, then verify an environment-approved staging run authenticates through OIDC without an npm publish token.
 - [ ] 3.2 Verify GitHub stable-release tag rules permit only repository administrators to create, update, delete, or force-push protected `vMAJOR.MINOR.PATCH` tags, and verify CI does not mutate release tags.
 - [ ] 3.3 Execute one administrator-created stable-tag release, verify automatic staging and npm review visibility, approve the staged package with npm 2FA, and verify the exact public version, provenance, clean install, CLI execution, and rejection/retry behavior.
-- [ ] 3.4 Run strict OpenSpec validation and the complete repository validation suite, then verify the working tree contains only the intended implementation and planning changes.
+- [x] 3.4 Run strict OpenSpec validation and the complete repository validation suite, then verify the working tree contains only the intended implementation and planning changes.
